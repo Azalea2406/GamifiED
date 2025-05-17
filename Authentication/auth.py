@@ -38,3 +38,9 @@ def login_user(email, password):
         return {"success": True, "user": user_data}
     except Exception as e:
         return {"success": False, "error": str(e)}
+def send_reset_email(email):
+    try:
+        auth.send_password_reset_email(email)
+        return {"status": "success", "message": f"Reset link sent to {email}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
