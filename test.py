@@ -1,5 +1,6 @@
 from Authentication.auth import signup_user, login_user, send_reset_email
-from Learning.progress_tracker import submit_level, get_user_xp
+from Learning.progress_tracker import submit_level
+from Learning.dashboard_page import get_user_xp
 
 # --- TEST 1: SIGNUP ---
 print("\n---- Testing Sign Up ----")
@@ -17,12 +18,16 @@ login_result = login_user("testuser1@example.com", "password123")
 print("Login Result:", login_result)
 
 if login_result["success"]:
-    user = login_result["user"]
-    user_id = login_result["user_id"]
+    user_data = login_result["user"]
+    user_id = user_data.get("user_id") or signup_result.get("user_id")
 
     # --- TEST 3: SUBMIT LEVEL COMPLETION ---
     print("\n---- Testing Level Submission ----")
-    level_submit = submit_level(user_id, level=1, earned_xp=50)
+    course_name = "Python Basics"
+    level_index = 0
+    score = 85  # simulate score out of 100
+
+    level_submit = submit_level(user_id, course_name, level_index, score)
     print("Submit Level:", level_submit)
 
     # --- TEST 4: GET USER XP ---

@@ -44,6 +44,7 @@ def login_user(email, password):
         user_id = user['localId'] # logs in the user and gets their id
 
         user_info = db.child("users").child(user_id).get().val()
+        user_info["user_id"] = user_id
         return {"success": True, "user": user_info} #Fetches the user's saved data (role, username, etc.) from Firebase
     
     except Exception as e: #Handles incorrect password, email not found, etc.
