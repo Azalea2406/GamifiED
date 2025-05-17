@@ -1,6 +1,6 @@
 from Authentication.auth import signup_user, login_user
 from Learning.quiz_submission import submit_quiz
-from Learning.dashboard_page import get_user_xp
+from ui.dashboard_page import get_user_xp
 
 print("------ TEST: Sign Up ------")
 signup = signup_user("quizuser@example.com", "securePass123", "student", "quizUser")
