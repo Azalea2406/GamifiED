@@ -1,5 +1,5 @@
 import streamlit as st
-from . import auth
+from .auth import signup_user, login_user
 
 def login_page():
     st.title("🔐 GamifiED Login")
@@ -9,7 +9,6 @@ def login_page():
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
     
-    #sign up code
     if choice == "Sign Up":
         confirm_password = st.text_input("Confirm Password", type="password")
         role = st.selectbox("I am a:", ["Learner", "Instructor"])
@@ -19,18 +18,17 @@ def login_page():
             if password != confirm_password:
                 st.error("Passwords do not match!")
             elif email and password and username:
-                result = auth.signup_user(email, password, role.lower(), username)
+                result = signup_user(email, password, role.lower(), username)
                 if result["success"]:
                     st.success("Account created! Please log in.")
                 else:
                     st.error(f"Error: {result['error']}")
             else:
                 st.warning("Please fill all fields.")
-    # Login code 
-    else:  
+    else:  # Login
         if st.button("Login"):
             if email and password:
-                result = auth.login_user(email, password)
+                result = login_user(email, password)
                 if result["success"]:
                     st.success(f"Welcome back, {result['user']['username']}!")
                     st.session_state["user"] = result["user"]
@@ -41,3 +39,8 @@ def login_page():
                         st.error("Incorrect password. Try again or reset.")
                     else:
                         st.error(result["error"])
+
+
+# Ensure the function runs when the file is executed
+if __name__ == "__main__":
+    login_page()
