@@ -3,6 +3,7 @@ import pyrebase
 firebase_config = {
     "apiKey": "AIzaSyBAxO8ACbviAbFZEopMiW-MD5WZX17TE4c",
     "authDomain": "gamified-2064.firebaseapp.com",
+    "databaseURL": "https://gamified-2064-default-rtdb.firebaseio.com", 
     "projectId": "gamified-2064",
     "storageBucket": "gamified-2064.firebasestorage.app",
     "messagingSenderId": "408735255781",
