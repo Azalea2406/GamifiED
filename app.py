@@ -1,5 +1,5 @@
 import streamlit as st
-from Authentication import login_page  # or from Authentication import login_page if it's a subfolder
+from Authentication import login_page
 
 def main():
     login_page.login_page()
