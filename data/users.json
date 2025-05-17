@@ -1,1 +1,17 @@
+[
+  {
+    "email": "learner@example.com",
+    "password": "1234",
+    "role": "learner",
+    "username": "LearnerOne",
+    "xp": 50
+  },
+  {
+    "email": "instructor@example.com",
+    "password": "admin",
+    "role": "instructor",
+    "username": "InstructorX",
+    "xp": 0
+  }
+]
 
