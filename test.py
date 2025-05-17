@@ -1,6 +1,6 @@
 from Authentication.auth import signup_user, login_user, send_reset_email
 from Learning.progress_tracker import submit_level
-from Learning.dashboard_page import get_user_xp
+from ui.dashboard_page import get_user_xp
 
 # --- TEST 1: SIGNUP ---
 print("\n---- Testing Sign Up ----")
