@@ -1,5 +1,6 @@
 import streamlit as st
-import auth
+from . import auth
+
 
 def login_page():
     st.title("🔐 GamifiED Login")
