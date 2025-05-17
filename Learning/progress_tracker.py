@@ -1,4 +1,4 @@
-from learning.xp_logic import calculate_xp
+from Learning.xp_logic import calculate_xp
 from firebase_config import db  # create firebase_config.py to reuse firebase setup
 
 def submit_level(user_id, course_name, level_index, score):
