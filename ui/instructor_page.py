@@ -6,7 +6,7 @@ def get_all_students():
     users = db.child("users").get().val()
     if not users:
         return {}
-    return {uid: data for uid, data in users.items() if data.get("role") == "student"}
+    return {uid: data for uid, data in users.items() if data.get("role") == "learner"}
 
 # Utility: Get XP of a student
 def get_user_xp(user_id):
