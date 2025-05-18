@@ -1,6 +1,6 @@
 import streamlit as st
-from Authentication.login_page import show_login_page
-from Authentication.auth import get_current_user
+from Authentication.login_page import login_page
+#from Authentication.auth import get_current_user
 from ui.dashboard_page import learner_dashboard
 from ui.instructor_page import instructor_dashboard
 
@@ -20,7 +20,7 @@ st.markdown("""
 
 # If not logged in, show login/signup
 if not st.session_state.logged_in:
-    show_login_page()
+    login_page()
 
 # If logged in, show dashboard based on role
 else:
@@ -36,6 +36,7 @@ else:
             st.session_state.user = None
             st.experimental_rerun()
 
+    
     if role == "student":
         learner_dashboard(user)
     elif role == "instructor":
