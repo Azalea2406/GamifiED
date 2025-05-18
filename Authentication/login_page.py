@@ -20,28 +20,38 @@ def login_page():
             elif email and password and username:
                 result = signup_user(email, password, role.lower(), username)
                 if result["success"]:
-                    st.success("Account created! Please log in.")
+                    st.success("✅ Account created! Please log in.")
                 else:
                     st.error(f"Error: {result['error']}")
             else:
                 st.warning("Please fill all fields.")
+    
     else:  # Login
         if st.button("Login"):
             if email and password:
                 result = login_user(email, password)
                 if result["success"]:
+                    user_data = result["user"]
+
+                    # Ensure all needed fields exist
+                    st.session_state["user"] = {
+                        "email": user_data.get("email", ""),
+                        "uid": user_data.get("uid", ""),
+                        "username": user_data.get("username", "User"),
+                        "role": user_data.get("role", "Learner").capitalize(),  # Capitalized for routing
+                    }
                     st.session_state["logged_in"] = True
-                    st.session_state["user"] = result["user"]
-                    st.success(f"Welcome back, {result['user']['username']}!")
+
+                    st.success(f"Welcome back, {st.session_state['user']['username']}!")
                     st.rerun()
                 else:
-                    if "EMAIL_NOT_FOUND" in result["error"]:
+                    error = result["error"]
+                    if "EMAIL_NOT_FOUND" in error:
                         st.warning("Email not registered. Please sign up.")
-                    elif "INVALID_PASSWORD" in result["error"]:
+                    elif "INVALID_PASSWORD" in error:
                         st.error("Incorrect password. Try again or reset.")
                     else:
-                        st.error(result["error"])
-
+                        st.error(error)
 
 # Ensure the function runs when the file is executed
 if __name__ == "__main__":
