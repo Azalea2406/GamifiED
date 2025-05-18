@@ -7,9 +7,9 @@ from ui.instructor_page import instructor_dashboard
 st.set_page_config(page_title="GamifiED", layout="wide")
 
 # Initialize session state
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.user = {}
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = {}
 
 # Title & Logo
 st.markdown("""
@@ -18,7 +18,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Login / Signup flow
-if not st.session_state.logged_in:
+if not st.session_state["authenticated"]:
     login_page()
 
 # Role-based dashboard
@@ -36,8 +36,8 @@ else:
         st.markdown("---")
 
         if st.button("Logout"):
-            st.session_state.logged_in = False
-            st.session_state.user = {}
+            st.session_state["authenticated"] = False
+            st.session_state["user"] = {}
             st.rerun()
 
     if role == "Learner":
