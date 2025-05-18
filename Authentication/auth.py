@@ -1,6 +1,7 @@
 import pyrebase
+import json
 
-# Firebase configuration - Replace with your own Firebase project credentials
+# Firebase configuration - Use your own project values
 firebase_config = {
     "apiKey": "AIzaSyBAxO8ACbviAbFZEopMiW-MD5WZX17TE4c",
     "authDomain": "gamified-2064.firebaseapp.com",
@@ -20,27 +21,50 @@ def signup_user(email, password, role, username):
     try:
         user = auth.create_user_with_email_and_password(email, password)
         user_id = user["localId"]
-        # Save user data in Firebase Realtime Database
-        db.child("users").child(user_id).set({
-            "email": email,
-            "role": role,
-            "username": username
-        })
+        
+        user_data = {
+            "email": email.strip(),
+            "role": role.strip().lower(),
+            "username": username.strip(),
+            "uid": user_id  # Save UID explicitly
+        }
+
+        db.child("users").child(user_id).set(user_data)
+
         return {"success": True}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": parse_error(e)}
 
 def login_user(email, password):
     try:
         user = auth.sign_in_with_email_and_password(email, password)
         user_id = user["localId"]
+
+        # Get stored user info
         user_data = db.child("users").child(user_id).get().val()
-        return {"success": True, "user": user_data, "user_id": user_id}
+
+        # Return essential info inside user
+        full_user = {
+            "email": user_data.get("email", email),
+            "username": user_data.get("username", "User"),
+            "role": user_data.get("role", "learner").capitalize(),  # Capitalize for UI
+            "uid": user_id
+        }
+
+        return {"success": True, "user": full_user}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": parse_error(e)}
+
 def send_reset_email(email):
     try:
         auth.send_password_reset_email(email)
         return {"status": "success", "message": f"Reset link sent to {email}"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": parse_error(e)}
+
+def parse_error(e):
+    try:
+        error_json = json.loads(e.args[1])
+        return error_json["error"]["message"]
+    except:
+        return str(e)
