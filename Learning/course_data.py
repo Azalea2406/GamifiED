@@ -15,3 +15,10 @@ COURSES = {
         ]
     }
 }
+def get_level_index(course_name, level_name):
+    course = COURSES.get(course_name, {})
+    levels = course.get("levels", [])
+    for idx, level in enumerate(levels):
+        if level["name"] == level_name:
+            return idx
+    return -1  # Not found
