@@ -3,6 +3,8 @@ from firebase_config import db
 from Quiz.quiz_engine import take_quiz
 from Quiz.quiz_data import QUIZ_QUESTIONS
 from Learning.course_data import COURSES
+import pandas as pd
+import altair as alt
 
 def get_user_xp(user_id):
     progress = db.child("progress").child(user_id).get().val()
@@ -12,6 +14,19 @@ def get_user_xp(user_id):
             for level in course.values():
                 total_xp += level.get("xp", 0)
     return total_xp
+
+def get_xp_over_time(user_id):
+    progress = db.child("progress").child(user_id).get().val()
+    data = []
+
+    if progress:
+        for course, levels in progress.items():
+            for level, details in levels.items():
+                timestamp = details.get("timestamp") or "Unknown"
+                xp = details.get("xp", 0)
+                data.append({"Date": timestamp, "XP": xp, "Level": level})
+
+    return pd.DataFrame(data)
 
 def get_assigned_course(user_id):
     data = db.child("assignments").child(user_id).get().val()
@@ -36,13 +51,37 @@ def learner_dashboard(user):
     total_xp = get_user_xp(user_id)
     st.success(f"🌟 Total XP: {total_xp}")
 
+#Profile Mock Section
+    st.markdown("### 🧑 Learner Profile")
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.image("https://cdn-icons-png.flaticon.com/512/1946/1946429.png", width=100)
+    with col2:
+        st.markdown(f"**Name:** {username}")
+        st.markdown(f"**Course:** {assigned_course}")
+        st.markdown(f"**Total XP:** {total_xp}")
+
+#XP Progress Chart
+    xp_df = get_xp_over_time(user_id)
+    if not xp_df.empty:
+        st.markdown("### 📈 XP Progress Over Time")
+        xp_df["Date"] = pd.to_datetime(xp_df["Date"], errors="coerce")
+        xp_df = xp_df.sort_values("Date")
+    
+        chart = alt.Chart(xp_df).mark_line(point=True).encode(
+            x="Date:T",
+            y="XP:Q",
+            tooltip=["Level", "XP", "Date"]
+        ).properties(width=700, height=300)
+
+        st.altair_chart(chart, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("📈 Progress & Quizzes")
     course = COURSES.get(assigned_course, {})
     if not course:
         st.error("Course data not found.")
         return
-
-    st.markdown("---")
-    st.subheader("📈 Progress & Quizzes")
 
     for idx, level in enumerate(course["levels"]):
         level_name = level["name"]
@@ -51,21 +90,31 @@ def learner_dashboard(user):
         with st.expander(f"Level {idx + 1}: {level_name} {'✅' if completed else ''}"):
             if completed:
                 st.info("Level already completed.")
+                continue
+
+            questions = QUIZ_QUESTIONS.get(assigned_course, {}).get(level_name, [])
+            if not questions:
+                st.warning("No questions found for this level.")
+                continue
+
+            st.markdown("### 📝 Quiz Questions")
+        answers = []
+        all_answered = True
+
+        for q_index, q in enumerate(questions):
+            ans = st.text_input(f"{q_index + 1}. {q['question']}", key=f"{level_name}_{q_index}")
+            answers.append(ans.strip())
+            if ans.strip() == "":
+                all_answered = False
+
+        if st.button(f"🚀 Submit Quiz - {level_name}", key=f"submit_{level_name}"):
+            if not all_answered:
+                st.warning("⛔ Please answer all questions before submitting.")
             else:
-                questions = QUIZ_QUESTIONS.get(assigned_course, {}).get(level_name, [])
-                if not questions:
-                    st.warning("No questions found for this level.")
-                    continue
-
-                answers = []
-                for q in questions:
-                    ans = st.text_input(f"Q: {q['question']}", key=f"{level_name}_{q['question']}")
-                    answers.append(ans)
-
-                if st.button(f"Submit Quiz - {level_name}", key=f"submit_{level_name}"):
-                    if all(ans.strip() != "" for ans in answers):
-                        result = take_quiz(user_id, assigned_course, level_name, answers)
-                        st.success(f"✅ Submitted! Score: {result['score']}%, XP Earned: {result['xp_result']['xp']}")
-                        st.experimental_rerun()
-                    else:
-                        st.warning("Please answer all questions.")
+                with st.spinner("Submitting your quiz..."):
+                    result = take_quiz(user_id, assigned_course, level_name, answers)
+                    st.success(
+                        f"✅ Submitted!\n\n🎯 Score: {result['score']}%\n🏆 XP Earned: {result['xp_result']['xp']}"
+                    )
+                    st.balloons()
+                    st.experimental_rerun()

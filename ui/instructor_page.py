@@ -1,5 +1,7 @@
 import streamlit as st
 from firebase_config import db
+from Learning.course_data import COURSES
+
 
 # Utility: Get all users with 'student' role from Firebase
 def get_all_students():

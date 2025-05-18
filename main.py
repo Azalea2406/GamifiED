@@ -25,19 +25,25 @@ if not st.session_state.logged_in:
 # If logged in, show dashboard based on role
 else:
     user = st.session_state.user
-    role = user.get("role", "student")
+    role = user.get("role", "learner")
 
     with st.sidebar:
+        st.title("GamifiED")
+        st.markdown("## 📋 Navigation")
+        #show user profile info
+        st.markdown("---")
         st.write(f"👤 Logged in as: `{user.get('username')}`")
         st.write(f"📧 Email: `{user.get('email')}`")
         st.write(f"🧑‍💼 Role: `{role}`")
+        st.markdown("---")
+
         if st.button("Logout"):
             st.session_state.logged_in = False
             st.session_state.user = None
-            st.experimental_rerun()
+            st.rerun()
 
     
-    if role == "student":
+    if role == "learner":
         learner_dashboard(user)
     elif role == "instructor":
         instructor_dashboard()
