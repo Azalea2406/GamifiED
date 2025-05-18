@@ -6,6 +6,7 @@ from Learning.course_data import COURSES
 import pandas as pd
 import altair as alt
 
+
 def get_user_xp(user_id):
     progress = db.child("progress").child(user_id).get().val()
     total_xp = 0
@@ -15,6 +16,7 @@ def get_user_xp(user_id):
                 total_xp += level.get("xp", 0)
     return total_xp
 
+
 def get_xp_over_time(user_id):
     progress = db.child("progress").child(user_id).get().val()
     data = []
@@ -22,24 +24,36 @@ def get_xp_over_time(user_id):
     if progress:
         for course, levels in progress.items():
             for level, details in levels.items():
-                timestamp = details.get("timestamp") or "Unknown"
+                timestamp = details.get("timestamp") or "1970-01-01T00:00:00"
                 xp = details.get("xp", 0)
                 data.append({"Date": timestamp, "XP": xp, "Level": level})
 
     return pd.DataFrame(data)
 
+
 def get_assigned_course(user_id):
     data = db.child("assignments").child(user_id).get().val()
-    return data.get("course") if data else None
+    # Defensive: check data and key existence
+    if data and isinstance(data, dict):
+        return data.get("course")
+    return None
+
 
 def has_completed_level(user_id, course, level_index):
     path = f"progress/{user_id}/{course}/level_{level_index}"
     return db.child(path).get().val() is not None
 
+
 def learner_dashboard(user):
     st.title("🎓 Learner Dashboard")
-    user_id = user.get("user_id") or user.get("localId")
-    username = user.get("username", "Learner")
+
+    # Try multiple ways to get user_id for robustness
+    user_id = user.get("user_id") or user.get("localId") or st.session_state.get("user", {}).get("uid")
+    username = user.get("username") or user.get("email") or "Learner"
+
+    if not user_id:
+        st.error("User ID not found. Please log in again.")
+        return
 
     assigned_course = get_assigned_course(user_id)
 
@@ -48,10 +62,11 @@ def learner_dashboard(user):
         return
 
     st.subheader(f"📚 Assigned Course: {assigned_course}")
+
     total_xp = get_user_xp(user_id)
     st.success(f"🌟 Total XP: {total_xp}")
 
-#Profile Mock Section
+    # Profile Mock Section
     st.markdown("### 🧑 Learner Profile")
     col1, col2 = st.columns([1, 2])
     with col1:
@@ -61,13 +76,13 @@ def learner_dashboard(user):
         st.markdown(f"**Course:** {assigned_course}")
         st.markdown(f"**Total XP:** {total_xp}")
 
-#XP Progress Chart
+    # XP Progress Chart
     xp_df = get_xp_over_time(user_id)
     if not xp_df.empty:
         st.markdown("### 📈 XP Progress Over Time")
         xp_df["Date"] = pd.to_datetime(xp_df["Date"], errors="coerce")
         xp_df = xp_df.sort_values("Date")
-    
+
         chart = alt.Chart(xp_df).mark_line(point=True).encode(
             x="Date:T",
             y="XP:Q",
@@ -78,7 +93,8 @@ def learner_dashboard(user):
 
     st.markdown("---")
     st.subheader("📈 Progress & Quizzes")
-    course = COURSES.get(assigned_course, {})
+
+    course = COURSES.get(assigned_course)
     if not course:
         st.error("Course data not found.")
         return
@@ -98,23 +114,28 @@ def learner_dashboard(user):
                 continue
 
             st.markdown("### 📝 Quiz Questions")
-        answers = []
-        all_answered = True
+            answers = []
+            all_answered = True
 
-        for q_index, q in enumerate(questions):
-            ans = st.text_input(f"{q_index + 1}. {q['question']}", key=f"{level_name}_{q_index}")
-            answers.append(ans.strip())
-            if ans.strip() == "":
-                all_answered = False
+            for q_index, q in enumerate(questions):
+                ans = st.radio(
+                    f"{q_index + 1}. {q['question']}",
+                    options=q['options'],
+                    key=f"{level_name}_{q_index}"
+                )
+                answers.append(ans)
+                if not ans:
+                    all_answered = False
 
-        if st.button(f"🚀 Submit Quiz - {level_name}", key=f"submit_{level_name}"):
-            if not all_answered:
-                st.warning("⛔ Please answer all questions before submitting.")
-            else:
-                with st.spinner("Submitting your quiz..."):
-                    result = take_quiz(user_id, assigned_course, level_name, answers)
-                    st.success(
-                        f"✅ Submitted!\n\n🎯 Score: {result['score']}%\n🏆 XP Earned: {result['xp_result']['xp']}"
-                    )
-                    st.balloons()
-                    st.experimental_rerun()
+            if st.button(f"🚀 Submit Quiz - {level_name}", key=f"submit_{level_name}"):
+                if not all_answered:
+                    st.warning("⛔ Please answer all questions before submitting.")
+                else:
+                    with st.spinner("Submitting your quiz..."):
+                        result = take_quiz(user_id, assigned_course, level_name, answers)
+                        st.success(
+                            f"✅ Submitted!\n\n🎯 Score: {result['score']}%\n🏆 XP Earned: {result['xp_result']['xp']}"
+                        )
+                        st.balloons()
+                        st.rerun()
+
