@@ -30,8 +30,10 @@ def login_page():
             if email and password:
                 result = login_user(email, password)
                 if result["success"]:
-                    st.success(f"Welcome back, {result['user']['username']}!")
+                    st.session_state["logged_in"] = True
                     st.session_state["user"] = result["user"]
+                    st.success(f"Welcome back, {result['user']['username']}!")
+                    st.rerun()
                 else:
                     if "EMAIL_NOT_FOUND" in result["error"]:
                         st.warning("Email not registered. Please sign up.")

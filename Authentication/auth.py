@@ -35,7 +35,7 @@ def login_user(email, password):
         user = auth.sign_in_with_email_and_password(email, password)
         user_id = user["localId"]
         user_data = db.child("users").child(user_id).get().val()
-        return {"success": True, "user": user_data}
+        return {"success": True, "user": user_data, "user_id": user_id}
     except Exception as e:
         return {"success": False, "error": str(e)}
 def send_reset_email(email):
