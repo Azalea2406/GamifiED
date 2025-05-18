@@ -1,5 +1,9 @@
 from Quiz.quiz_data import QUIZ_QUESTIONS
 from Learning.progress_tracker import submit_level
+from datetime import datetime
+from firebase_config import db
+from Learning.course_data import get_level_index
+
 
 def take_quiz(user_id, course_name, level_name, answers):
     from Learning.course_data import COURSES
@@ -27,6 +31,10 @@ def take_quiz(user_id, course_name, level_name, answers):
     level_index = get_level_index(course_name, level_name)
 
     result = submit_level(user_id, course_name, level_index, score)
+    db.child("progress").child(user_id).child(course_name).child(f"level_{level_index}").update({
+    "xp": result["xp"],
+    "timestamp": datetime.now().isoformat()
+})
     return {
         "total_questions": len(questions),
         "correct": correct,
