@@ -5,10 +5,9 @@ from Quiz.quiz_data import QUIZ_QUESTIONS
 from Learning.course_data import COURSES
 import pandas as pd
 import altair as alt
-
-# ✅ Lottie Animation for Confetti
 import requests
 from streamlit_lottie import st_lottie
+from datetime import datetime
 
 # ✅ Set Gaming Background Theme
 def set_gaming_background():
@@ -24,7 +23,7 @@ def set_gaming_background():
         """,
         unsafe_allow_html=True
     )
-#
+
 def set_gaming_fonts():
     st.markdown("""
     <style>
@@ -47,12 +46,7 @@ def set_gaming_fonts():
         color: #FFFFFF !important;
     }
 
-    /* Style for custom icons */
-    .icon {
-        font-size: 20px;
-        margin-right: 8px;
-    }
-
+    .icon { font-size: 20px; margin-right: 8px; }
     .icon-purple { color: #A29BFE; }
     .icon-pink { color: #FF6B81; }
     .icon-cyan { color: #00FFFF; }
@@ -60,14 +54,12 @@ def set_gaming_fonts():
     </style>
     """, unsafe_allow_html=True)
 
-# ✅ Load Lottie Animation from URL
 def load_lottieurl(url):
     r = requests.get(url)
     if r.status_code != 200:
         return None
     return r.json()
 
-# ✅ Badge System
 def get_badge(xp):
     if xp >= 300:
         return "🥇 Master"
@@ -110,9 +102,7 @@ def has_completed_level(user_id, course, level_index):
     path = f"progress/{user_id}/{course}/level_{level_index}"
     return db.child(path).get().val() is not None
 
-# ✅ MAIN FUNCTION: Learner Dashboard
 def learner_dashboard(user):
-    # ✅ Apply Background and Fonts
     set_gaming_background()
     set_gaming_fonts()
 
@@ -126,7 +116,6 @@ def learner_dashboard(user):
         return
 
     assigned_course = get_assigned_course(user_id)
-
     if not assigned_course:
         st.warning("No course assigned yet. Please wait for your instructor to assign one.")
         return
@@ -136,48 +125,31 @@ def learner_dashboard(user):
     total_xp = get_user_xp(user_id)
     st.success(f"🌟 Total XP: {total_xp}")
 
-    # XP Over Time Chart
+    # ✅ Display Badge
+    badge = get_badge(total_xp)
+    st.info(f"🏅 Your Badge: **{badge}**")
+
+    # ✅ XP Over Time Chart
     xp_df = get_xp_over_time(user_id)
+    st.write("📊 XP Raw Data (debug):", xp_df)
+
     if not xp_df.empty:
         st.markdown("### 📈 XP Progress Over Time")
 
-        # Ensure valid date entries
         xp_df["Date"] = pd.to_datetime(xp_df["Date"], errors="coerce")
-        xp_df = xp_df.dropna(subset=["Date"])  # Drop rows with invalid dates
+        xp_df = xp_df.dropna(subset=["Date"])
         xp_df = xp_df.sort_values("Date")
 
-        if len(xp_df) > 1:  # Check to avoid plotting single-point line
+        if len(xp_df) > 1:
             chart = alt.Chart(xp_df).mark_line(
                 point=alt.OverlayMarkDef(color="#00FFFF", size=50),
                 color="#00FFFF",
                 strokeWidth=2
             ).encode(
-                x=alt.X("Date:T",
-                    axis=alt.Axis(
-                        labelColor="#E0FFFF",  # Lighter for readability
-                        titleColor="#E0FFFF",
-                        gridColor="rgba(255, 255, 255, 0.1)",
-                        domainColor="#00FFFF",
-                        title="Date"
-                    )
-                ),
-                y=alt.Y("XP:Q",
-                    axis=alt.Axis(
-                        labelColor="#E0FFFF",
-                        titleColor="#E0FFFF",
-                        gridColor="rgba(255, 255, 255, 0.1)",
-                        domainColor="#00FFFF",
-                        title="XP"
-                    )
-                ),
+                x=alt.X("Date:T", axis=alt.Axis(labelColor="#E0FFFF", titleColor="#E0FFFF")),
+                y=alt.Y("XP:Q", axis=alt.Axis(labelColor="#E0FFFF", titleColor="#E0FFFF")),
                 tooltip=["Level", "XP", "Date"]
-            ).properties(
-                width=800,
-                height=400,
-                background="#111"  # Dark gray background
-            ).configure_axis(
-                grid=True
-            )
+            ).properties(width=800, height=400, background="#111").configure_axis(grid=True)
 
             st.altair_chart(chart, use_container_width=True)
         else:
@@ -186,8 +158,6 @@ def learner_dashboard(user):
         st.warning("No XP data available to display.")
 
     st.markdown("---")
-
-    # Progrss and Quizzes
     st.subheader("📈 Progress & Quizzes")
 
     course = COURSES.get(assigned_course)
@@ -200,12 +170,10 @@ def learner_dashboard(user):
         completed = has_completed_level(user_id, assigned_course, idx)
 
         with st.expander(f"Level {idx + 1}: {level_name} {'✅' if completed else ''}"):
-            # ✅ Frosted Glass Card Styling
-            st.markdown(f"""
+            st.markdown("""
             <div style='padding: 10px; border-radius: 15px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin-bottom: 15px;'>
             """, unsafe_allow_html=True)
 
-            # ✅ Progress Bar
             required_xp = level.get("xp_required", 100)
             current_xp = 100 if completed else 0
             st.progress(min(current_xp / required_xp, 1.0))
@@ -245,7 +213,6 @@ def learner_dashboard(user):
                         st.markdown(f"🎯 **Score:** `{result['score']}%`")
                         st.markdown(f"🏆 **XP Earned:** `{result['xp_result']['xp']}`")
 
-                        # ✅ Confetti Animation
                         lottie_confetti = load_lottieurl("https://lottie.host/60f5cb9c-56c0-4a6d-8ea1-53d312a2c213/VkhvxEiBBk.json")
                         if lottie_confetti:
                             st_lottie(lottie_confetti, height=200, key=f"confetti_{idx}")
