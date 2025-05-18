@@ -40,7 +40,7 @@ def login_page():
                         "username": user_data.get("username", "User"),
                         "role": user_data.get("role", "Learner").capitalize(),  # Capitalized for routing
                     }
-                    st.session_state["logged_in"] = True
+                    st.session_state["authenticated"] = True
 
                     st.success(f"Welcome back, {st.session_state['user']['username']}!")
                     st.balloons()
